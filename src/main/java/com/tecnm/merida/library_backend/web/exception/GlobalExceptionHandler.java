@@ -4,13 +4,14 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.Map;
 
-// Convierte los errores comunes en respuestas claras (400 / 409) en lugar de un 500
+// Convierte los errores comunes en respuestas claras (400 / 401 / 409) en lugar de un 500
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -33,6 +34,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleBadParameter(MethodArgumentTypeMismatchException ex) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(Map.of("error", "Invalid value for parameter '" + ex.getName() + "'"));
+    }
+
+    // Login con correo o contrasena incorrectos -> 401
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<Map<String, String>> handleBadCredentials(BadCredentialsException ex) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("error", ex.getMessage()));
     }
 
     // Integridad referencial (ej. borrar un genero que tiene libros, correo o ISBN repetido) -> 409
